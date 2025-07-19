@@ -1,0 +1,27 @@
+[package]
+name = "ent"
+edition.workspace = true
+version.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+clap.workspace = true
+colored.workspace = true
+futures-util.workspace = true
+glob.workspace = true
+indicatif.workspace = true
+inventory.workspace = true
+reqwest.workspace = true
+semver.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+stone_recipe.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[features]
+default = ["stone", "summit"]
+stone = []
+summit = []
+ypkg = []
