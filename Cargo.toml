@@ -3,6 +3,12 @@ name = "ent"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["stone", "summit"]
+stone = ["dep:stone_recipe"]
+summit = []
+ypkg = []
+
 [dependencies]
 clap = { version = "4.5.20", features = ["derive"] }
 colored = "2.1.0"
@@ -14,6 +20,6 @@ reqwest = { version = "0.12.9", features = ["json"] }
 serde = { version = "1.0.214", features = ["derive"] }
 serde_json = "1.0.132"
 serde_yaml = "0.9.34"
-stone_recipe = { git = "https://github.com/serpent-os/tools.git", version = "0.24.2" }
+stone_recipe = { git = "https://github.com/serpent-os/tools.git", version = "0.24.2", optional = true }
 thiserror = "2.0.9"
 tokio = { version = "1.41.0", features = ["macros"] }
