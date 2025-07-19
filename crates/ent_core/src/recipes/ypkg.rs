@@ -4,7 +4,7 @@
 
 use std::{fs, path::Path};
 
-use super::{monitoring::Monitoring, ParserRegistration, Recipe, RecipeError, RecipeParser};
+use super::{ParserRegistration, Recipe, RecipeError, RecipeParser, monitoring::Monitoring};
 
 /// Parser implementation for YPKG recipe files
 struct Parser {}

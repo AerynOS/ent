@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{monitoring::Monitoring, ParserRegistration, Recipe, RecipeError, RecipeParser};
+use super::{ParserRegistration, Recipe, RecipeError, RecipeParser, monitoring::Monitoring};
 use std::{fs, path::Path};
 
 /// A parser implementation for stone recipe files that parses recipe files and any associated
