@@ -28,11 +28,10 @@ impl RecipeParser for Parser {
     /// * `Result<Recipe, RecipeError>` - Parsed Recipe or error if parsing fails
     fn parse(&self, recipe: &Path) -> Result<Recipe, RecipeError> {
         // Read and parse main recipe file
-        let s = fs::read_to_string(recipe)
-            .map_err(|_| RecipeError::InvalidRecipe(recipe.display().to_string()))?;
+        let s = fs::read_to_string(recipe).map_err(|_| RecipeError::InvalidRecipe(recipe.display().to_string()))?;
 
-        let p: YpkgRecipe = serde_yaml::from_str(&s)
-            .map_err(|_| RecipeError::InvalidRecipe(recipe.display().to_string()))?;
+        let p: YpkgRecipe =
+            serde_yaml::from_str(&s).map_err(|_| RecipeError::InvalidRecipe(recipe.display().to_string()))?;
 
         // Look for adjacent monitoring file
         let adjacent_monitor = ["monitoring.yaml", "monitoring.yml"]
@@ -43,8 +42,8 @@ impl RecipeParser for Parser {
         // Parse monitoring file if it exists
         let monitoring = match adjacent_monitor {
             Some(path) => {
-                let s = fs::read_to_string(&path)
-                    .map_err(|_| RecipeError::InvalidRecipe(path.display().to_string()))?;
+                let s =
+                    fs::read_to_string(&path).map_err(|_| RecipeError::InvalidRecipe(path.display().to_string()))?;
                 Monitoring::from_str(&s).ok()
             }
             None => None,

@@ -31,14 +31,11 @@ impl RecipeParser for Parser {
     fn parse(&self, recipe: &Path) -> Result<Recipe, RecipeError> {
         // Parse the main recipe file
         let recipe_contents = fs::read_to_string(recipe)
-            .map_err(|_| {
-                RecipeError::InvalidRecipe(recipe.to_str().unwrap_or_default().to_string())
-            })
+            .map_err(|_| RecipeError::InvalidRecipe(recipe.to_str().unwrap_or_default().to_string()))
             .unwrap_or_default();
 
-        let parsed_recipe = stone_recipe::from_str(&recipe_contents).map_err(|_| {
-            RecipeError::InvalidRecipe(recipe.to_str().unwrap_or_default().to_string())
-        })?;
+        let parsed_recipe = stone_recipe::from_str(&recipe_contents)
+            .map_err(|_| RecipeError::InvalidRecipe(recipe.to_str().unwrap_or_default().to_string()))?;
 
         // Check for and parse optional monitoring config
         let adjacent_monitor = recipe.with_file_name("monitoring.yaml");
@@ -46,9 +43,10 @@ impl RecipeParser for Parser {
             let monitoring_contents = fs::read_to_string(&adjacent_monitor)
                 .map_err(|_| RecipeError::InvalidRecipe(adjacent_monitor.display().to_string()))
                 .unwrap_or_default();
-            Some(Monitoring::from_str(&monitoring_contents).map_err(|e| {
-                RecipeError::InvalidMonitoring(e, adjacent_monitor.display().to_string())
-            })?)
+            Some(
+                Monitoring::from_str(&monitoring_contents)
+                    .map_err(|e| RecipeError::InvalidMonitoring(e, adjacent_monitor.display().to_string()))?,
+            )
         } else {
             None
         };
