@@ -244,18 +244,26 @@ version = "0.25.6"
 dependencies = [
  "clap",
  "colored",
+ "ent_core",
  "futures-util",
  "glob",
  "indicatif",
  "inventory",
  "reqwest",
  "semver",
+ "tokio",
+]
+
+[[package]]
+name = "ent_core"
+version = "0.25.6"
+dependencies = [
+ "inventory",
+ "reqwest",
  "serde",
- "serde_json",
  "serde_yaml",
  "stone_recipe",
  "thiserror",
- "tokio",
 ]
 
 [[package]]

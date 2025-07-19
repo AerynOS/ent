@@ -6,7 +6,7 @@ use std::{collections::HashMap, path::Path};
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use ent::{
+use ent_core::{
     data,
     recipes::{self, ParserRegistration, Recipe, RecipeError},
 };
