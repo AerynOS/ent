@@ -45,7 +45,7 @@ enum CheckCommands {
     Security,
 }
 
-static VCS_DELIMITERS: [&'static str; 3] = ["+git", "+vcs", "+mur"];
+static VCS_DELIMITERS: [&str; 3] = ["+git", "+vcs", "+mur"];
 
 // This function scans the directory for recipes and parses them
 fn scan_dir(
@@ -272,8 +272,7 @@ async fn list_builds() -> Result<(), Box<dyn std::error::Error>> {
     for page in 0..=3 {
         let response = client
             .get(format!(
-                "https://dash.serpentos.com/api/v1/tasks/enumerate?pageNumber={}",
-                page
+                "https://dash.serpentos.com/api/v1/tasks/enumerate?pageNumber={page}",
             ))
             .send()
             .await?
@@ -363,7 +362,7 @@ fn print_task(
     };
 
     let truncated_build_id = {
-        let id = task.build_id.split('/').last().unwrap_or(&task.build_id);
+        let id = task.build_id.split('/').next_back().unwrap_or(&task.build_id);
         if id.len() > 50 {
             format!("{}...", &id[..47])
         } else {

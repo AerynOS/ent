@@ -20,8 +20,7 @@ pub struct VersionResponse {
 /// from release-monitoring.org API using the project_id
 pub async fn get_latest_version(project_id: i64) -> Result<VersionResponse, reqwest::Error> {
     let url = format!(
-        "https://release-monitoring.org/api/v2/versions/?project_id={}",
-        project_id
+        "https://release-monitoring.org/api/v2/versions/?project_id={project_id}",
     );
     let response = reqwest::get(&url).await?.json().await?;
     Ok(response)
