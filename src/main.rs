@@ -13,6 +13,7 @@ use ent::{
 use futures_util::StreamExt;
 use glob::Pattern;
 use indicatif::ProgressBar;
+use semver::Version;
 
 /// A simple CLI tool to check for working with recipe trees
 #[derive(Parser)]
@@ -224,11 +225,33 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
 
     // Print updates
     for update in updates {
+        // Check if the versions follow semver, and color accordingly.
+        let latest_version_str = if let Ok(current) = Version::parse(&update.current_version) {
+            if let Ok(latest) = Version::parse(&update.latest_version) {
+                if current >= latest {
+                    // Current version is higher than or equal to "latest" version
+                    update.latest_version.bright_black()
+                } else if latest.major > current.major {
+                    // Latest version has higher major version
+                    update.latest_version.red()
+                } else {
+                    // Latest version has higher minor or patch version
+                    update.latest_version.yellow()
+                }
+            } else {
+                // Could not parse, probably not semver
+                update.latest_version.red()
+            }
+        } else {
+            // Could not parse, probably not semver
+            update.latest_version.red()
+        };
+
         println!(
             "{:<width_source$} {:<width_current$} {:<width_latest$}",
             update.source.cyan(),
-            update.current_version.red(),
-            update.latest_version.green(),
+            update.current_version.green(),
+            latest_version_str,
             width_source = max_source_len,
             width_current = max_current_version_len,
             width_latest = max_latest_version_len
