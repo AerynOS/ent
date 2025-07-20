@@ -32,6 +32,7 @@ enum Commands {
         check_command: CheckCommands,
     },
     /// List recent builds from Summit
+    #[cfg(feature = "summit")]
     Builds,
 }
 
@@ -239,6 +240,7 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
 }
 
 /// Fetches and displays the current builds from Summit
+#[cfg(feature = "summit")]
 async fn list_builds() -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
 
@@ -374,6 +376,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 todo!("Implement security check");
             }
         },
+        #[cfg(feature = "summit")]
         Commands::Builds => {
             list_builds().await?;
         }

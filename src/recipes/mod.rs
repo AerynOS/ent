@@ -10,7 +10,10 @@ mod parser;
 use monitoring::Monitoring;
 pub use parser::*;
 
+#[cfg(feature = "stone")]
 mod stone;
+
+#[cfg(feature = "ypkg")]
 mod ypkg;
 
 // Source recipe details
