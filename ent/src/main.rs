@@ -6,7 +6,7 @@ use std::{collections::HashMap, path::Path};
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use ent::{
+use ent_core::{
     data,
     recipes::{self, ParserRegistration, Recipe, RecipeError},
 };
@@ -45,7 +45,7 @@ enum CheckCommands {
     Security,
 }
 
-static VCS_DELIMITERS: [&'static str; 3] = ["+git", "+vcs", "+mur"];
+static VCS_DELIMITERS: [&str; 3] = ["+git", "+vcs", "+mur"];
 
 // This function scans the directory for recipes and parses them
 fn scan_dir(
@@ -82,11 +82,7 @@ fn scan_recipes(root: impl AsRef<Path>) -> Result<Vec<Recipe>, RecipeError> {
 
     let glob_patterns = registry
         .values()
-        .flat_map(|p| {
-            p.pattern
-                .iter()
-                .map(move |&s| (Pattern::new(s).unwrap(), p))
-        })
+        .flat_map(|p| p.pattern.iter().map(move |&s| (Pattern::new(s).unwrap(), p)))
         .collect::<HashMap<_, _>>();
 
     let scanned = scan_dir(root, &glob_patterns)?;
@@ -137,8 +133,7 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
                     if m.project_id != 0 {
                         let lv = data::updates::get_latest_version(m.project_id).await?;
                         // Determine next version - prefer stable > latest > first available
-                        let next_version = if let Some(stable) = lv.stable_versions.first().cloned()
-                        {
+                        let next_version = if let Some(stable) = lv.stable_versions.first().cloned() {
                             Some(stable)
                         } else if let Some(latest) = lv.latest_version {
                             Some(latest.clone())
@@ -146,8 +141,7 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
                             lv.versions.first().cloned()
                         };
 
-                        let sanitized_recipe_version =
-                            split_before_delimiters(&recipe.version, &VCS_DELIMITERS);
+                        let sanitized_recipe_version = split_before_delimiters(&recipe.version, &VCS_DELIMITERS);
 
                         // Create update info if versions differ
                         if let Some(nv) = next_version {
@@ -186,22 +180,11 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
 
     // Calculate column widths for pretty printing
     let max_source_len = updates.iter().map(|u| u.source.len()).max().unwrap_or(0);
-    let max_current_version_len = updates
-        .iter()
-        .map(|u| u.current_version.len())
-        .max()
-        .unwrap_or(0);
-    let max_latest_version_len = updates
-        .iter()
-        .map(|u| u.latest_version.len())
-        .max()
-        .unwrap_or(0);
+    let max_current_version_len = updates.iter().map(|u| u.current_version.len()).max().unwrap_or(0);
+    let max_latest_version_len = updates.iter().map(|u| u.latest_version.len()).max().unwrap_or(0);
 
     // Print results
-    println!(
-        "\nTotal packages to update: {}\n",
-        updates.len().to_string().yellow()
-    );
+    println!("\nTotal packages to update: {}\n", updates.len().to_string().yellow());
     // Print header
     println!(
         "{:width_source$} {:width_current$} {:width_latest$}",
@@ -272,8 +255,7 @@ async fn list_builds() -> Result<(), Box<dyn std::error::Error>> {
     for page in 0..=3 {
         let response = client
             .get(format!(
-                "https://dash.serpentos.com/api/v1/tasks/enumerate?pageNumber={}",
-                page
+                "https://dash.serpentos.com/api/v1/tasks/enumerate?pageNumber={page}",
             ))
             .send()
             .await?
@@ -285,11 +267,7 @@ async fn list_builds() -> Result<(), Box<dyn std::error::Error>> {
     // Calculate column widths
     let max_id_len = 8; // Fixed width for ID
     let max_pkg_len = 50; // Fixed max width for build ID
-    let max_arch_len = all_items
-        .iter()
-        .map(|t| t.architecture.len())
-        .max()
-        .unwrap_or(10);
+    let max_arch_len = all_items.iter().map(|t| t.architecture.len()).max().unwrap_or(10);
     let max_status_len = 10; // Fixed width for status
 
     // Print header
@@ -347,12 +325,7 @@ async fn list_builds() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn print_task(
-    task: &data::summit::Task,
-    max_id_len: usize,
-    max_pkg_len: usize,
-    max_arch_len: usize,
-) {
+fn print_task(task: &data::summit::Task, max_id_len: usize, max_pkg_len: usize, max_arch_len: usize) {
     let status_color = match task.status {
         data::summit::BuildStatus::New => "cyan",
         data::summit::BuildStatus::Failed => "red",
@@ -363,7 +336,7 @@ fn print_task(
     };
 
     let truncated_build_id = {
-        let id = task.build_id.split('/').last().unwrap_or(&task.build_id);
+        let id = task.build_id.split('/').next_back().unwrap_or(&task.build_id);
         if id.len() > 50 {
             format!("{}...", &id[..47])
         } else {

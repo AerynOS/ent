@@ -1,0 +1,19 @@
+[package]
+name = "ent_core"
+edition.workspace = true
+version.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+inventory.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_yaml.workspace = true
+stone_recipe.workspace = true
+thiserror.workspace = true
+
+[features]
+default = ["stone", "summit"]
+stone = []
+summit = []
+ypkg = []
