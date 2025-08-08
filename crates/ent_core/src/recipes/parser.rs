@@ -8,7 +8,7 @@ use std::path::Path;
 
 use thiserror::Error;
 
-use super::{monitoring, Recipe};
+use super::{Recipe, monitoring};
 
 // This is the error type that all parsers must return
 #[derive(Debug, Error)]
