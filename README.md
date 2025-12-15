@@ -2,7 +2,7 @@
 
 `ent` is a tool for working with packaging recipes in git trees/monorepos.
 
-Primarily it is intended for use with [Serpent OS](https://serpentos.com) packaging, and to
+Primarily it is intended for use with [AerynOS](https://aerynos.com) packaging, and to
 a limited degree, [Solus](https://getsol.us) packaging.
 
 ## Installation
