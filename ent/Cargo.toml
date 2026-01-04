@@ -16,9 +16,11 @@ inventory.workspace = true
 reqwest.workspace = true
 semver.workspace = true
 tokio.workspace = true
+xdg = "3.0.0"
+cdb = "0.6.0"
 
 [features]
-default = ["stone", "summit"]
+default = ["stone"]
 stone = []
 summit = []
 ypkg = []
