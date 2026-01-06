@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, io::Error, path::Path};
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;
@@ -355,8 +355,49 @@ fn print_task(task: &data::summit::Task, max_id_len: usize, max_pkg_len: usize, 
         arch_width = max_arch_len,
     );
 }
+
+fn build_cache() -> Result<(), Error> {
+    use cdb;
+    use xdg;
+
+    // The correct ent cache.cdb location needs setting up
+    let xdg_dirs = xdg::BaseDirectories::with_prefix("ent");
+    let cache_path = xdg_dirs
+        .place_cache_file("cache.cdb")
+        .expect("cannot create ent xdg cache directory");
+
+    let cache_file = cache_path.to_str().expect("path to ent xdg cache file not valid");
+
+    let mut cache = cdb::CDBWriter::create(cache_file)?;
+    cache.add(b"Hello", b"World!")?;
+    cache.finish()?;
+    Ok(())
+}
+
+fn read_cache() -> Result<(), Error> {
+    use cdb;
+    use xdg;
+
+    let xdg_dirs = xdg::BaseDirectories::with_prefix("ent");
+    let cache_path = xdg_dirs
+        .get_cache_file("cache.cdb")
+        .expect("ent xdg cache directory not present");
+
+    let cache_path_copy = cache_path.clone();
+    println!("Contents of {:?}:", &cache_path_copy);
+    let cache = cdb::CDB::open(cache_path)?;
+    for result in cache.find(b"Hello") {
+        println!("{:?}", result.unwrap().to_ascii_lowercase());
+    }
+    println!("END Contents of {:?}\n", &cache_path_copy);
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = build_cache();
+    let _ = read_cache();
+
     let cli = Cli::parse();
 
     match &cli.command {

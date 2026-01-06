@@ -9,6 +9,7 @@ edition = "2024"
 rust-version = "1.88"
 
 [workspace.dependencies]
+cdb = "0.6.0"
 clap = { version = "4.5.20", features = ["derive"] }
 colored = "2.1.0"
 futures-util = "0.3.31"
@@ -23,3 +24,4 @@ serde_yaml = "0.9.34"
 stone_recipe = { git = "https://github.com/AerynOS/tools.git", version = "0.25.6"}
 thiserror = "2.0.9"
 tokio = { version = "1.41.0", features = ["macros", "rt-multi-thread"] }
+xdb = "3.0.0"
