@@ -7,23 +7,42 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 #[serde(from = "i32")]
 pub enum BuildStatus {
+    /// Freshly created task
     New = 0,
-    Failed = 1,
+    /// This build must remain blocked until its block
+    /// criteria have been met, i.e. the dependent that
+    /// caused the failure has been fixed.
+    Blocked = 1,
+    /// This task is now building
     Building = 2,
+    /// Now publishing to Vessel
     Publishing = 3,
+    /// Job successfully completed!
     Completed = 4,
-    Blocked = 5,
+    /// Failed execution or evaluation
+    Failed = 5,
+    /// Task was superseded by a newer task.
+    ///
+    /// If this task was previously blocked, it must be
+    /// removed from the task_blockers table, but only after the
+    /// superseding task has been marked blocked by the blocker
+    /// in a new row in the task_blockers table.
+    Superseded = 6,
+    /// Cancelled execution
+    Cancelled = 7,
 }
 
 impl From<i32> for BuildStatus {
     fn from(value: i32) -> Self {
         match value {
             0 => BuildStatus::New,
-            1 => BuildStatus::Failed,
+            1 => BuildStatus::Blocked,
             2 => BuildStatus::Building,
             3 => BuildStatus::Publishing,
             4 => BuildStatus::Completed,
-            5 => BuildStatus::Blocked,
+            5 => BuildStatus::Failed,
+            6 => BuildStatus::Superseded,
+            7 => BuildStatus::Cancelled,
             _ => BuildStatus::Failed, // Default to Failed for unknown values
         }
     }

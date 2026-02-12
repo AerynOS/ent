@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{collections::HashMap, io::Error, path::Path};
+use std::{collections::HashMap, path::Path};
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;
@@ -178,6 +178,8 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
     let mut updates: Vec<_> = latest_recipes.into_iter().flatten().flatten().collect();
     updates.sort_by(|a, b| a.source.cmp(&b.source));
 
+    // cut-off point for caching -- everything below should read from cache
+
     // Calculate column widths for pretty printing
     let max_source_len = updates.iter().map(|u| u.source.len()).max().unwrap_or(0);
     let max_current_version_len = updates.iter().map(|u| u.current_version.len()).max().unwrap_or(0);
@@ -255,7 +257,7 @@ async fn list_builds() -> Result<(), Box<dyn std::error::Error>> {
     for page in 0..=3 {
         let response = client
             .get(format!(
-                "https://dash.serpentos.com/api/v1/tasks/enumerate?pageNumber={page}",
+                "https://dash.aerynos.dev/api/v1/tasks/enumerate?pageNumber={page}",
             ))
             .send()
             .await?
@@ -328,11 +330,13 @@ async fn list_builds() -> Result<(), Box<dyn std::error::Error>> {
 fn print_task(task: &data::summit::Task, max_id_len: usize, max_pkg_len: usize, max_arch_len: usize) {
     let status_color = match task.status {
         data::summit::BuildStatus::New => "cyan",
-        data::summit::BuildStatus::Failed => "red",
+        data::summit::BuildStatus::Blocked => "red",
         data::summit::BuildStatus::Building => "yellow",
         data::summit::BuildStatus::Publishing => "blue",
         data::summit::BuildStatus::Completed => "green",
-        data::summit::BuildStatus::Blocked => "red",
+        data::summit::BuildStatus::Failed => "red",
+        data::summit::BuildStatus::Superseded => "grey",
+        data::summit::BuildStatus::Cancelled => "white",
     };
 
     let truncated_build_id = {
@@ -356,10 +360,7 @@ fn print_task(task: &data::summit::Task, max_id_len: usize, max_pkg_len: usize, 
     );
 }
 
-fn build_cache() -> Result<(), Error> {
-    use cdb;
-    use xdg;
-
+fn build_cache() -> Result<(), Box<dyn std::error::Error>> {
     // The correct ent cache.cdb location needs setting up
     let xdg_dirs = xdg::BaseDirectories::with_prefix("ent");
     let cache_path = xdg_dirs
@@ -369,14 +370,18 @@ fn build_cache() -> Result<(), Error> {
     let cache_file = cache_path.to_str().expect("path to ent xdg cache file not valid");
 
     let mut cache = cdb::CDBWriter::create(cache_file)?;
-    cache.add(b"Hello", b"World!")?;
+    cache.add(b">", b"Hello World via cdb!")?;
+
+    // upstream info
+    // key: name
+    // value: version
+
     cache.finish()?;
     Ok(())
 }
 
-fn read_cache() -> Result<(), Error> {
-    use cdb;
-    use xdg;
+fn read_cache() -> Result<(), Box<dyn std::error::Error>> {
+    use std::str::from_utf8;
 
     let xdg_dirs = xdg::BaseDirectories::with_prefix("ent");
     let cache_path = xdg_dirs
@@ -384,12 +389,13 @@ fn read_cache() -> Result<(), Error> {
         .expect("ent xdg cache directory not present");
 
     let cache_path_copy = cache_path.clone();
-    println!("Contents of {:?}:", &cache_path_copy);
     let cache = cdb::CDB::open(cache_path)?;
-    for result in cache.find(b"Hello") {
-        println!("{:?}", result.unwrap().to_ascii_lowercase());
+    println!("BEGIN Contents of {:?}\n", &cache_path_copy);
+    for result in cache.iter() {
+        let (key, value) = result.unwrap();
+        println!("{:?} {:?}", from_utf8(&key).unwrap(), from_utf8(&value).unwrap());
     }
-    println!("END Contents of {:?}\n", &cache_path_copy);
+    println!("\nEND Contents of {:?}\n", &cache_path_copy);
     Ok(())
 }
 
