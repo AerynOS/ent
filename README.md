@@ -9,8 +9,10 @@ a limited degree, [Solus](https://getsol.us) packaging.
 
 `ent` is written in Rust, and can be installed via `cargo`:
 
-```sh
-cargo install --path .
+```
+git clone https://github.com/AerynOS/ent.git
+cd ent
+cargo install --path ent
 ```
 
 ## Usage
