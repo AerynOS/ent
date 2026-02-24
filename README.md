@@ -14,6 +14,10 @@ git clone https://github.com/AerynOS/ent.git
 cd ent
 cargo install --path ent
 ```
+By default, `ent` is built with support for `stone` recipes. If you need support for `ypkg`, you'll need to install it as an optional feature:
+```
+cargo install --path ent --features ypkg
+```
 
 ## Usage
 
