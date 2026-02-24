@@ -21,4 +21,4 @@ tokio.workspace = true
 default = ["stone"]
 stone = []
 summit = []
-ypkg = []
+ypkg = ["ent_core/ypkg"]
