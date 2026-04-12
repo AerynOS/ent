@@ -129,37 +129,26 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
                 pb.set_message(recipe.name.to_string());
 
                 // Check if recipe has monitoring info and get latest version
-                let latest_version = if let Some(m) = &recipe.monitoring {
-                    if m.project_id != 0 {
-                        let lv = data::updates::get_latest_version(m.project_id).await?;
-                        // Determine next version - prefer stable > latest > first available
-                        let next_version = if let Some(stable) = lv.stable_versions.first().cloned() {
-                            Some(stable)
-                        } else if let Some(latest) = lv.latest_version {
-                            Some(latest.clone())
-                        } else {
-                            lv.versions.first().cloned()
-                        };
+                let latest_version = if let Some(m) = recipe.monitoring.as_ref().filter(|m| m.project_id != 0) {
+                    let lv = data::updates::get_latest_version(m.project_id).await?;
+                    // Determine next version - prefer stable > latest > first available
+                    let next_version = lv
+                        .stable_versions
+                        .first()
+                        .cloned()
+                        .or(lv.latest_version)
+                        .or_else(|| lv.versions.first().cloned());
 
-                        let sanitized_recipe_version = split_before_delimiters(&recipe.version, &VCS_DELIMITERS);
+                    let sanitized_recipe_version = split_before_delimiters(&recipe.version, &VCS_DELIMITERS);
 
-                        // Create update info if versions differ
-                        if let Some(nv) = next_version {
-                            if nv != sanitized_recipe_version {
-                                Some(RequiredUpdate {
-                                    source: recipe.name.clone(),
-                                    current_version: sanitized_recipe_version.to_string(),
-                                    latest_version: nv,
-                                })
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
+                    // Create update info if versions differ
+                    next_version
+                        .filter(|nv| nv != sanitized_recipe_version)
+                        .map(|nv| RequiredUpdate {
+                            source: recipe.name.clone(),
+                            current_version: sanitized_recipe_version.to_string(),
+                            latest_version: nv,
+                        })
                 } else {
                     None
                 };
