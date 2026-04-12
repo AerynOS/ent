@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::Path, time::Duration};
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;
@@ -121,16 +121,22 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
             .progress_chars("#>-"),
     );
 
+    let client = reqwest::ClientBuilder::new()
+        .timeout(Duration::from_secs(30))
+        .connect_timeout(Duration::from_secs(10))
+        .build()?;
+
     // Process recipes concurrently to check for updates
     let futures = futures_util::stream::iter(recipes)
         .map(|recipe| {
             let pb = pb.clone();
+            let client = client.clone();
             async move {
                 pb.set_message(recipe.name.to_string());
 
                 // Check if recipe has monitoring info and get latest version
                 let latest_version = if let Some(m) = recipe.monitoring.as_ref().filter(|m| m.project_id != 0) {
-                    let lv = data::updates::get_latest_version(m.project_id).await?;
+                    let lv = data::updates::get_latest_version(&client, m.project_id).await?;
                     // Determine next version - prefer stable > latest > first available
                     let next_version = lv
                         .stable_versions
