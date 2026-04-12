@@ -243,7 +243,10 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
 /// Fetches and displays the current builds from Summit
 #[cfg(feature = "summit")]
 async fn list_builds() -> Result<(), Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
+    let client = reqwest::ClientBuilder::new()
+        .timeout(Duration::from_secs(30))
+        .connect_timeout(Duration::from_secs(10))
+        .build()?;
 
     // Fetch 3 pages of results
     let mut all_items = Vec::new();
