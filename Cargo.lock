@@ -293,6 +293,8 @@ dependencies = [
  "inventory",
  "reqwest",
  "semver",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 

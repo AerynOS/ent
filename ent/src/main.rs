@@ -14,6 +14,7 @@ use futures_util::StreamExt;
 use glob::Pattern;
 use indicatif::ProgressBar;
 use semver::Version;
+use serde::Serialize;
 
 /// A simple CLI tool to check for working with recipe trees
 #[derive(Parser)]
@@ -40,7 +41,11 @@ enum Commands {
 #[derive(Subcommand)]
 enum CheckCommands {
     /// Check for updates
-    Updates,
+    Updates {
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
     /// Check for security status
     Security,
 }
@@ -99,7 +104,7 @@ fn split_before_delimiters<'a>(text: &'a str, delimiters: &'a [&'a str]) -> &'a 
 }
 
 /// A required update for CLI rendering
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct RequiredUpdate {
     pub source: String,
     pub current_version: String,
@@ -108,7 +113,7 @@ pub struct RequiredUpdate {
 
 /// Checks for available updates by comparing local recipe versions with upstream versions
 /// Returns a formatted display of packages that need updating
-async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error::Error>> {
+async fn check_updates(root: impl AsRef<Path>, json: bool) -> Result<(), Box<dyn std::error::Error>> {
     // Scan local recipes
     let recipes = scan_recipes(root)?;
 
@@ -172,6 +177,12 @@ async fn check_updates(root: impl AsRef<Path>) -> Result<(), Box<dyn std::error:
     // Filter and sort updates
     let mut updates: Vec<_> = latest_recipes.into_iter().flatten().flatten().collect();
     updates.sort_by(|a, b| a.source.cmp(&b.source));
+
+    if json {
+        let json_output = serde_json::to_string_pretty(&updates)?;
+        println!("{}", json_output);
+        return Ok(());
+    }
 
     // Calculate column widths for pretty printing
     let max_source_len = updates.iter().map(|u| u.source.len()).max().unwrap_or(0);
@@ -362,9 +373,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             todo!("Implement refresh");
         }
         Commands::Check { check_command } => match check_command {
-            CheckCommands::Updates => {
-                println!("Checking for updates...");
-                check_updates(".").await?;
+            CheckCommands::Updates { json } => {
+                if !json {
+                    println!("Checking for updates...");
+                }
+                check_updates(".", *json).await?;
             }
             CheckCommands::Security => {
                 todo!("Implement security check");
