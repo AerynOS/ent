@@ -70,9 +70,9 @@ pub struct RecipeMonitor {
     pub recipe_name: String,
     pub current_version: String,
     /// to be used for lookups in ReleaseMonitor DBs
-    pub upstream_id: Some(u32),
+    pub upstream_id: Option<u32>,
     /// to be used for lookups in RssMonitor DBs
-    pub rss_url: Some(String),
+    pub rss_url: Option<String>,
 }
 
 /// Only valid if an upstream id is found.
