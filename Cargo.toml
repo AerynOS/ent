@@ -21,7 +21,7 @@ semver = "1.0.26"
 serde = { version = "1.0.214", features = ["derive"] }
 serde_json = "1.0.132"
 serde_yaml = "0.9.34"
-stone_recipe = { git = "https://github.com/AerynOS/tools.git", version = "0.26.1"}
+stone_recipe = { git = "https://github.com/AerynOS/os-tools.git" }
 thiserror = "2.0.9"
 tokio = { version = "1.41.0", features = ["macros", "rt-multi-thread"] }
 xdb = "3.0.0"

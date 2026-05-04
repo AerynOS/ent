@@ -1479,7 +1479,7 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 [[package]]
 name = "stone_recipe"
 version = "0.26.1"
-source = "git+https://github.com/AerynOS/tools.git#4e908fc39ac4afa3140c664405e418fdf681f3a2"
+source = "git+https://github.com/AerynOS/os-tools.git#4e908fc39ac4afa3140c664405e418fdf681f3a2"
 dependencies = [
  "kdl",
  "nom",
