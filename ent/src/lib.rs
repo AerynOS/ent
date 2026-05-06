@@ -19,7 +19,7 @@
 //! release-monitoring id.
 //!
 //! Each class of collected Monitor data is written atomically to one database
-//! file per run. This means that we can build "views" that are only depend on
+//! file per run. This means that we can build "views" that only depend on
 //! database files being *present*. This makes for an efficient WORM scenario.
 //!
 //! In addition, assuming that the database format is well defined, it also
@@ -27,7 +27,7 @@
 //! deserialise the database schema on their own.
 //!
 //! Implementation wise, we have decided to use D.J. Bernsteins CDB format.
-//! This is a very efficient file-backed key value store, that is written
+//! This is a very efficient file-backed key value hash store, that is written
 //! atomically to disk in a single pass.
 //!
 //! Hence, to achieve the goals stated above, the idea is to make the CDB cache
@@ -43,29 +43,31 @@
 //! as well, though we may also be able to exploit the fact that CDB allows
 //! for one key to be present multiple times with different values.
 
-/// Q: Would it make sense to update each DB independently?
-/// A: If it did, we would need to have the refresh keyed to the upstream
-///    git ref? I.e. perhaps there is value in being able to refresh *to*
-///    a git ref, recipe tree cache wise?
-///    Then the respective release-, rss-, and cve-monitoring db caches
-///    can also be updated independently?
-///    This would effectively enable different update cadences for the
-///    tree and for the respective upstream db caches?
+//! Q: Would it make sense to update each DB independently?
+//! A: If it did, we would need to have the refresh keyed to the upstream
+//!    git ref? I.e. perhaps there is value in being able to refresh *to*
+//!    a git ref, recipe tree cache wise?
+//!    Then the respective release-, rss-, and cve-monitoring db caches
+//!    can also be updated independently?
+//!    This would effectively enable different update cadences for the
+//!    tree and for the respective upstream db caches?
+//!
+//! Q: As a corollary to the above, could this proposed design actually
+//!    be used to save "monitoring state" for the associated channel's
+//!    history identifiers in terms of "this is the known state of
+//!    the moss-format repo index for this identifier?"
+//! A: Yes. If we split out the ability to cache the recipes tree vs.
+//!    the individual upstream monitors, we could conveniently generate
+//!    reports for future LTS scenarios in terms of CVEs, by simply
+//!    reusing the newest upstream monitor cache dbs and creating views
+//!    against each tagged (= permanent) history identifier.
+//!    This would serve as an efficient means to track multiple "releases"
+//!    against fresh upstream/rss/cve caches?
 
-/// Q: As a corollary to the above, could this proposed design actually
-///    be used to save "monitoring state" for the associated channel's
-///    history identifiers in terms of "this is the known state of
-///    the moss-format repo index for this identifier?"
-/// A: Yes. If we split out the ability to cache the recipes tree vs.
-///    the individual upstream monitors, we could conveniently generate
-///    reports for future LTS scenarios in terms of CVEs, by simply
-///    reusing the newest upstream monitor cache dbs and creating views
-///    against each tagged (= permanent) history identifier.
-///    This would serve as an efficient means to track multiple "releases"
-///    against fresh upstream/rss/cve caches?
+use serde::{Deserialize, Serialize};
 
 /// Will be read from a checked out clone on each refresh
-#[derive(Debug)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct RecipeMonitor {
     pub recipe_name: String,
     pub current_version: String,
@@ -76,7 +78,7 @@ pub struct RecipeMonitor {
 }
 
 /// Only valid if an upstream id is found.
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ReleaseMonitor {
     pub upstream_id: u32,
     pub upstream_name: String,
@@ -86,15 +88,15 @@ pub struct ReleaseMonitor {
 /// Only valid if an upstream rss feed is found.
 ///
 /// The idea is that we can parse the latest_version from this feed.
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct RssMonitor {
     pub rss_url: String,
     pub latest_version: String,
 }
 
 /// Need to do some more research on this
-// pub struct CveMonitor {
-// }
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CveMonitor {}
 
 /// query the upstream db, create structs, stream structs to cache
 fn build_cache() {}
@@ -104,3 +106,38 @@ fn read_cache() {}
 fn compute_updates() {}
 /// show the collection of updatable recipes
 fn show_updates() {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn recipe_monitor_serde() {
+        let recipe_monitor = RecipeMonitor {
+            recipe_name: String::from("somename"),
+            current_version: String::from("0.1"),
+            upstream_id: Some(42),
+            rss_url: None,
+        };
+
+        let rm_string = r#"{
+  "recipe_name": "somename",
+  "current_version": "0.1",
+  "upstream_id": 42,
+  "rss_url": null
+}"#;
+
+        let recipe_monitor_serialized: String = serde_json::to_string_pretty(&recipe_monitor).unwrap();
+        println!("serialised  : {:?}\n", &recipe_monitor_serialized);
+        let recipe_monitor_json_by_hand = String::from(rm_string);
+        println!("done by hand: {:?}\n", &recipe_monitor_json_by_hand);
+        // check equality between the serialized json and the manual json
+        assert_eq!(&recipe_monitor_serialized, &recipe_monitor_json_by_hand);
+
+        let recipe_monitor_serialized_string = &recipe_monitor_serialized;
+        let recipe_monitor_deserialized: RecipeMonitor =
+            serde_json::from_str(recipe_monitor_serialized_string).unwrap();
+        // check equality between original struct and deserialized struct.
+        assert_eq!(recipe_monitor, recipe_monitor_deserialized);
+    }
+}
